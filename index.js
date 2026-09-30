@@ -20,41 +20,36 @@ async function readfilewithdelay(){
 }
 app.get('/products',async (req,res)=>{
     try {
+        let key=req.url
+        let value=caches[key]
+        if(value){
+            return res.json(value);
+            
+        }
         const products = await readfilewithdelay();
-        res.json(products);
+        caches[key]=products; 
+        return res.json(products);
     } catch (err) {
         console.log(err);
     }
 });
 
-app.get('/products/:id',(req,res)=>{
+app.get('/products/:id',async (req,res)=>{
     const id=req.params.id;
-    getProducts()
-    .then(products=>{
-        const product=products.find(p=>p.id==id);
+    try {
+        const products = await readfilewithdelay();
+        const product = products.find(p=>p.id==id);
         if(!product){
             res.status(404).send('product not found')
             return
         }
         res.send(product);
-    })
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 });
 
-app.get('/products/:id',(req,res)=>{
-    const id=req.params.id;
-    getProducts()
-    .then(products=>{
-        const product=products.find(p=>p.id==id);
-        if(!product){
-            res.status(404).send('product not found')
-            return
-        }
-        res.send(product);
-    })
-    .catch(err=>{
-        res.status(500).send(err.message);
-    })
-})
+
 
 // app.get('/products/:id',(req,res)=>{
 //     const id=req.params.id;
